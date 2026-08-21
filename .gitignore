@@ -1,1 +1,9 @@
-.vscode/*
+# .NET Build outputs
+[Bb]in/
+[Oo]bj/
+
+# IDE / Editor files
+.vs/
+.vscode/
+*.user
+*.suo

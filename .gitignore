@@ -1,9 +1,11 @@
 # .NET Build outputs
 [Bb]in/
 [Oo]bj/
+[Dd]ebug/
 
 # IDE / Editor files
 .vs/
 .vscode/
 *.user
 *.suo
+test-files/

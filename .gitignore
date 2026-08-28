@@ -9,3 +9,7 @@
 *.user
 *.suo
 test-files/
+
+#Frontend
+node_modules/
+dist/

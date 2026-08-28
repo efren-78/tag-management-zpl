@@ -1,0 +1,21 @@
+services:
+
+  #1. Frontend: Donde interactua el usuario. Por defecto en el puerto 80.
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    container_name: label-printer-frontend
+    restart: unless-stopped
+
+  #2. Backend: Donde se procesan las etiquetas. Por defecto en el puerto 80.
+  backend:
+    build:
+      context: ./backend/src/LabelPrinterMVP
+      dockerfile: Dockerfile
+    container_name: label-printer-backend
+    # Permite interactuar con la aplicación de consola mediante terminal
+    stdin_open: true
+    tty: true

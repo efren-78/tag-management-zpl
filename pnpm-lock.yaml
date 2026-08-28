@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      zpl-renderer-js:
+        specifier: ^4.0.0
+        version: 4.0.0
+
+packages:
+
+  zpl-renderer-js@4.0.0:
+    resolution: {integrity: sha512-tcpyTVldabjbPj5Nmru1mieh/Y0OEs+VsqTlzMZLgSeB+wnldxKeLha7VRJmeGZJw3rlxu+wTberFKiuwhfcOA==}
+
+snapshots:
+
+  zpl-renderer-js@4.0.0: {}

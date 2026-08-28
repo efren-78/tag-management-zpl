@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zebra ZPL Designer & PRN Editor</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="dark-mode">
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">⚡</span>
+        <h1>ZPL Designer &amp; PRN Editor</h1>
+      </div>
+      <div class="global-controls">
+        <div class="control-group">
+          <label for="label-width">Ancho (in):</label>
+          <input type="number" id="label-width" value="4" min="1" max="10" step="0.1" />
+        </div>
+        <div class="control-group">
+          <label for="label-height">Alto (in):</label>
+          <input type="number" id="label-height" value="3" min="1" max="20" step="0.1" />
+        </div>
+        <div class="control-group">
+          <label for="label-dpi">DPI:</label>
+          <select id="label-dpi">
+            <option value="203">203 DPI</option>
+            <option value="300">300 DPI</option>
+            <option value="600">600 DPI</option>
+          </select>
+        </div>
+        <div class="button-group">
+          <label class="btn btn-secondary file-upload">
+            <span>Cargar .PRN</span>
+            <input type="file" id="btn-load-prn" accept=".prn,.zpl,.txt" />
+          </label>
+          <button id="btn-export-json" class="btn btn-secondary">Exportar JSON</button>
+          <button id="btn-export-zpl" class="btn btn-primary">Exportar ZPL</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-workspace">
+      <!-- Left Sidebar: Tools and Layers -->
+      <aside class="sidebar-left">
+        <div class="sidebar-section">
+          <h2>Herramientas</h2>
+          <div class="tools-grid">
+            <button class="tool-btn" data-tool="text" title="Agregar Texto">
+              <span class="tool-icon">T</span>
+              <span>Texto</span>
+            </button>
+            <button class="tool-btn" data-tool="barcode" title="Agregar Código de Barras">
+              <span class="tool-icon">█</span>
+              <span>Código Barras</span>
+            </button>
+            <button class="tool-btn" data-tool="rect" title="Agregar Rectángulo/Línea">
+              <span class="tool-icon">▬</span>
+              <span>Forma</span>
+            </button>
+            <button class="tool-btn" data-tool="image" title="Subir Imagen">
+              <span class="tool-icon">🖼️</span>
+              <span>Imagen</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-section layers-section">
+          <h2>Capas (Elementos)</h2>
+          <div id="layers-list" class="layers-list">
+            <!-- Dynamic layers will go here -->
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center: Workspace Canvas -->
+      <section class="canvas-container">
+        <div class="canvas-zoom-controls">
+          <button id="btn-zoom-out">-</button>
+          <span id="zoom-value">100%</span>
+          <button id="btn-zoom-in">+</button>
+          <button id="btn-zoom-fit">Ajustar</button>
+        </div>
+        
+        <div class="canvas-scroll-wrapper">
+          <div id="zpl-canvas" class="zpl-canvas">
+            <div id="zpl-canvas-grid" class="zpl-canvas-grid"></div>
+            <!-- Canvas Elements dynamically added here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Sidebar: Properties and Preview -->
+      <aside class="sidebar-right">
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="properties">Propiedades</button>
+          <button class="tab-btn" data-tab="preview">Vista Previa</button>
+        </div>
+
+        <div class="tab-content" id="tab-properties">
+          <div id="no-selection-msg" class="info-msg">
+            <p>Selecciona un elemento en el lienzo para editar sus propiedades.</p>
+          </div>
+          <form id="properties-form" class="properties-form hidden">
+            <!-- Property controls generated dynamically or statically -->
+            <div class="form-group">
+              <label for="prop-id">ID Elemento</label>
+              <input type="text" id="prop-id" readonly />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prop-x">Posición X (dots)</label>
+                <input type="number" id="prop-x" min="0" />
+              </div>
+              <div class="form-group">
+                <label for="prop-y">Posición Y (dots)</label>
+                <input type="number" id="prop-y" min="0" />
+              </div>
+            </div>
+
+            <div class="form-row text-props-only">
+              <div class="form-group">
+                <label for="prop-font-size-h">Tamaño H (dots)</label>
+                <input type="number" id="prop-font-size-h" min="5" />
+              </div>
+              <div class="form-group">
+                <label for="prop-font-size-w">Tamaño W (dots)</label>
+                <input type="number" id="prop-font-size-w" min="5" />
+              </div>
+            </div>
+
+            <div class="form-row barcode-props-only">
+              <div class="form-group">
+                <label for="prop-bc-height">Alto Barras (dots)</label>
+                <input type="number" id="prop-bc-height" min="10" />
+              </div>
+              <div class="form-group">
+                <label for="prop-bc-ratio">Ancho Módulo</label>
+                <input type="number" id="prop-bc-ratio" min="1" max="10" />
+              </div>
+            </div>
+
+            <div class="form-group text-or-bc-props">
+              <label for="prop-content">Contenido</label>
+              <textarea id="prop-content" rows="3"></textarea>
+              <span class="help-text">Usa <code>{{variable}}</code> para campos dinámicos.</span>
+            </div>
+
+            <div class="form-row text-props-only">
+              <div class="form-group-checkbox">
+                <input type="checkbox" id="prop-sequential" />
+                <label for="prop-sequential">¿Numeración Secuencial?</label>
+              </div>
+            </div>
+
+            <div class="form-group sequential-props hidden">
+              <label for="prop-seq-start">Valor Inicial</label>
+              <input type="number" id="prop-seq-start" value="1" />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="prop-rotation">Rotación</label>
+                <select id="prop-rotation">
+                  <option value="N">Normal (0°)</option>
+                  <option value="R">Rotado (90°)</option>
+                  <option value="I">Invertido (180°)</option>
+                  <option value="B">Rotado (270°)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <button type="button" id="btn-delete-element" class="btn btn-danger">Eliminar Elemento</button>
+            </div>
+          </form>
+
+          <!-- Raw ZPL Realtime Output -->
+          <div class="sidebar-section raw-zpl-section">
+            <h2>Código ZPL Generado</h2>
+            <textarea id="zpl-output" readonly></textarea>
+          </div>
+        </div>
+
+        <div class="tab-content hidden" id="tab-preview">
+          <div style="margin-bottom: 16px; display: flex; gap: 8px;">
+            <button id="btn-open-modal" class="btn btn-secondary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>🔍</span> Ver en Grande
+            </button>
+            <button id="btn-toggle-rotate-tab" class="btn btn-secondary" title="Girar Vista 180°" style="display: flex; align-items: center; gap: 4px;">
+              <span>🔄</span> 180°
+            </button>
+          </div>
+
+          <div class="preview-variables-section hidden" id="preview-variables-container">
+            <h3>Valores de Prueba</h3>
+            <div id="preview-variables-inputs" class="variables-inputs">
+              <!-- Dynamically populated test inputs for variables -->
+            </div>
+          </div>
+
+          <div class="preview-render-area">
+            <div id="local-preview-canvas"></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Modal for fullscreen preview -->
+    <div id="preview-modal" class="modal hidden">
+      <div class="modal-backdrop" id="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Vista Previa de Impresión Ampliada</h2>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button id="btn-toggle-rotate" class="btn btn-secondary" style="font-size: 12px; height: 32px;">🔄 Rotar 180°</button>
+            <button id="btn-close-modal" class="btn-close">&times;</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <div id="modal-preview-canvas-container">
+            <div id="modal-preview-canvas"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden image upload helper -->
+    <input type="file" id="image-upload-helper" accept="image/png, image/jpeg" style="display: none;" />
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

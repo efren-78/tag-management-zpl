@@ -59,11 +59,19 @@ export function detectZplBounds(
 /**
  * Parses ZPL/PRN string and returns canvas dimensions and reconstructed elements.
  */
-export async function parseZplCode(zplText: string): Promise<ParsedZpl> {
+export async function parseZplCode(zplText: string, currentDpi: number = 203): Promise<ParsedZpl> {
   // Default values
-  let widthDots = 812; // default 4 inches at 203 dpi
-  let heightDots = 609; // default 3 inches at 203 dpi
-  let dpi = 203;
+  let widthDots: number | null = null;
+  let heightDots: number | null = null;
+  let dpi = currentDpi;
+
+  // Media Hardware Config defaults
+  let mediaTracking: 'gap' | 'black_mark' | 'continuous' | 'auto' = 'gap';
+  let mediaType: 'thermal_transfer' | 'direct_thermal' = 'thermal_transfer';
+  let printMode: 'tear_off' | 'cutter' | 'peel_off' | 'rewind' = 'tear_off';
+  let printSpeed: number | undefined = undefined;
+  let darkness: number | undefined = undefined;
+  let topOffsetDots: number | undefined = undefined;
 
   const elements: LabelElement[] = [];
 
@@ -107,6 +115,49 @@ export async function parseZplCode(zplText: string): Promise<ParsedZpl> {
         // Label Length/Height
         const h = parseInt(params, 10);
         if (!isNaN(h) && h > 0) heightDots = h;
+        break;
+      }
+      case 'MN': {
+        // Media Tracking: ^MNY (gap), ^MNM (black mark), ^MNN (continuous), ^MNA (auto)
+        const type = params.substring(0, 1).toUpperCase();
+        if (type === 'N') mediaTracking = 'continuous';
+        else if (type === 'M') mediaTracking = 'black_mark';
+        else if (type === 'A') mediaTracking = 'auto';
+        else mediaTracking = 'gap';
+        break;
+      }
+      case 'MT': {
+        // Media Type: ^MTT (thermal transfer / ribbon), ^MTD (direct thermal)
+        const type = params.substring(0, 1).toUpperCase();
+        if (type === 'D') mediaType = 'direct_thermal';
+        else mediaType = 'thermal_transfer';
+        break;
+      }
+      case 'MM': {
+        // Print Mode: ^MMT (tear-off), ^MMC (cutter), ^MMP (peel-off), ^MMR (rewind)
+        const mode = params.substring(0, 1).toUpperCase();
+        if (mode === 'C') printMode = 'cutter';
+        else if (mode === 'P') printMode = 'peel_off';
+        else if (mode === 'R') printMode = 'rewind';
+        else printMode = 'tear_off';
+        break;
+      }
+      case 'PR': {
+        // Print Speed: ^PRp,r,b (print, slew, backfeed speed)
+        const speed = parseInt(params.split(',')[0], 10);
+        if (!isNaN(speed) && speed > 0) printSpeed = speed;
+        break;
+      }
+      case 'SD': {
+        // Darkness / Temperatura: ~SDd (0-30)
+        const darkVal = parseInt(params, 10);
+        if (!isNaN(darkVal)) darkness = darkVal;
+        break;
+      }
+      case 'LT': {
+        // Label Top Offset: ^LTt
+        const ltVal = parseInt(params, 10);
+        if (!isNaN(ltVal)) topOffsetDots = ltVal;
         break;
       }
       case 'FO': {
@@ -318,14 +369,29 @@ export async function parseZplCode(zplText: string): Promise<ParsedZpl> {
     }
   }
 
-  dpi = 203;
-  const widthInches = parseFloat((widthDots / dpi).toFixed(2));
-  const heightInches = parseFloat((heightDots / dpi).toFixed(2));
+  // Scan boundary coordinates to ensure no content is clipped
+  const bounds = detectZplBounds(zplText, widthDots || 812, heightDots || 609, dpi);
+
+  const finalWidthDots = widthDots ? Math.max(widthDots, bounds.widthDots) : bounds.widthDots;
+  const finalHeightDots = heightDots ? Math.max(heightDots, bounds.heightDots) : bounds.heightDots;
+
+  const widthInches = parseFloat((finalWidthDots / dpi).toFixed(2));
+  const heightInches = parseFloat((finalHeightDots / dpi).toFixed(2));
 
   return {
     widthInches,
     heightInches,
+    widthDots: finalWidthDots,
+    heightDots: finalHeightDots,
     dpi,
-    elements
+    elements,
+    mediaConfig: {
+      mediaTracking,
+      mediaType,
+      printMode,
+      printSpeed,
+      darkness,
+      topOffsetDots: topOffsetDots || bounds.topOffsetDots,
+    }
   };
 }

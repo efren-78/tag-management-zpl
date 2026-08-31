@@ -1,20 +1,22 @@
-import type { LabelElement } from './types';
-export type { LabelElement };
+import type { LabelElement, ZplMediaConfig } from './types';
+export type { LabelElement, ZplMediaConfig };
 
 /**
- * Generates ZPL code from elements list.
+ * Generates ZPL code from elements list and optional media hardware configuration.
  * @param elements List of label elements.
  * @param widthInches Label width in inches.
  * @param heightInches Label height in inches.
  * @param dpi Dots Per Inch (203, 300, 600).
  * @param variables Optional test values to replace {{variable}} in preview.
+ * @param mediaConfig Optional hardware and paper configuration (^MN, ^MT, ^MM, ^PR, ~SD).
  */
 export function generateZplCode(
   elements: LabelElement[],
   widthInches: number,
   heightInches: number,
   dpi: number,
-  variables: Record<string, string> = {}
+  variables: Record<string, string> = {},
+  mediaConfig?: Partial<ZplMediaConfig>
 ): string {
   const widthDots = Math.round(widthInches * dpi);
   const heightDots = Math.round(heightInches * dpi);
@@ -26,8 +28,49 @@ export function generateZplCode(
   zpl += `^PW${widthDots}\n`;
   zpl += `^LL${heightDots}\n`;
   zpl += '^LH0,0\n'; // Label Home: top-left
-  zpl += '^LT15\n'; // Label Top offset: shift 15 dots down for safe margin
-  zpl += '^PR4,4\n'; // Print speed 4
+  zpl += `^LT${mediaConfig?.topOffsetDots !== undefined ? mediaConfig.topOffsetDots : 15}\n`;
+
+  // Media tracking ^MN
+  if (mediaConfig?.mediaTracking === 'continuous') {
+    zpl += '^MNN\n';
+  } else if (mediaConfig?.mediaTracking === 'black_mark') {
+    zpl += '^MNM\n';
+  } else if (mediaConfig?.mediaTracking === 'auto') {
+    zpl += '^MNA\n';
+  } else if (mediaConfig?.mediaTracking === 'gap') {
+    zpl += '^MNY\n';
+  }
+
+  // Media type ^MT
+  if (mediaConfig?.mediaType === 'direct_thermal') {
+    zpl += '^MTD\n';
+  } else if (mediaConfig?.mediaType === 'thermal_transfer') {
+    zpl += '^MTT\n';
+  }
+
+  // Print mode ^MM
+  if (mediaConfig?.printMode === 'cutter') {
+    zpl += '^MMC\n';
+  } else if (mediaConfig?.printMode === 'peel_off') {
+    zpl += '^MMP\n';
+  } else if (mediaConfig?.printMode === 'rewind') {
+    zpl += '^MMR\n';
+  } else if (mediaConfig?.printMode === 'tear_off') {
+    zpl += '^MMT\n';
+  }
+
+  // Print speed ^PR
+  if (mediaConfig?.printSpeed) {
+    zpl += `^PR${mediaConfig.printSpeed},${mediaConfig.printSpeed}\n`;
+  } else {
+    zpl += '^PR4,4\n';
+  }
+
+  // Darkness ~SD
+  if (mediaConfig?.darkness !== undefined) {
+    zpl += `~SD${mediaConfig.darkness}\n`;
+  }
+
   zpl += '^CI27\n';  // Code page 27 (Latin 1/UTF-8 compatible)
   zpl += '^PA0,1,1,0\n';
   zpl += '\n';

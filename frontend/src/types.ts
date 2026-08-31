@@ -25,11 +25,23 @@ export interface LabelElement {
   zplImgHeight?: number;
 }
 
+export interface ZplMediaConfig {
+  mediaTracking: 'gap' | 'black_mark' | 'continuous' | 'auto'; // ^MN
+  mediaType: 'thermal_transfer' | 'direct_thermal';             // ^MT
+  printMode: 'tear_off' | 'cutter' | 'peel_off' | 'rewind';     // ^MM
+  printSpeed?: number;                                          // ^PR
+  darkness?: number;                                            // ~SD
+  topOffsetDots?: number;                                       // ^LT
+}
+
 export interface ParsedZpl {
   widthInches: number;
   heightInches: number;
+  widthDots: number;
+  heightDots: number;
   dpi: number;
   elements: LabelElement[];
+  mediaConfig: ZplMediaConfig;
 }
 
 export interface DynamicBounds {

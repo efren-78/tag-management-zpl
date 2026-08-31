@@ -13,9 +13,7 @@
     "vite": "^8.2.2"
   },
   "dependencies": {
-    "@types/pako": "^2.0.4",
     "bwip-js": "^4.11.4",
-    "pako": "^3.0.1",
     "zpl-renderer-js": "^4.0.0",
     "zpl2svg": "^1.1.0"
   }

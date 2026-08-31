@@ -1,238 +1,525 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zebra ZPL Designer & PRN Editor</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/src/style.css" />
-  </head>
-  <body class="dark-mode">
-    <header class="app-header">
-      <div class="logo-area">
-        <span class="logo-icon">⚡</span>
-        <h1>ZPL Designer &amp; PRN Editor</h1>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zebra ZPL Designer & PRN Editor</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+
+<body class="dark-mode">
+  <header class="app-header">
+    <div class="logo-area">
+      <span class="logo-icon">⚡</span>
+      <h1>ZPL Designer &amp; PRN Editor</h1>
+    </div>
+    <div class="global-controls">
+      <div class="control-group">
+        <label for="label-width">Ancho (in):</label>
+        <input type="number" id="label-width" value="4" min="1" max="10" step="0.1" />
       </div>
-      <div class="global-controls">
-        <div class="control-group">
-          <label for="label-width">Ancho (in):</label>
-          <input type="number" id="label-width" value="4" min="1" max="10" step="0.1" />
+      <div class="control-group">
+        <label for="label-height">Alto (in):</label>
+        <input type="number" id="label-height" value="3" min="1" max="20" step="0.1" />
+      </div>
+      <div class="control-group">
+        <label for="label-dpi">DPI:</label>
+        <select id="label-dpi">
+          <option value="203">203 DPI</option>
+          <option value="300">300 DPI</option>
+          <option value="600">600 DPI</option>
+        </select>
+      </div>
+      <div class="header-media-chip" id="header-media-chip" title="Ficha Técnica del Papel / Dimensiones Reales">
+        <span class="chip-icon">📐</span>
+        <span id="header-media-dimensions">4.0" x 3.0" (102x76 mm)</span>
+        <span class="chip-divider">|</span>
+        <span id="header-media-type-badge">📜 Hueco (Gap)</span>
+        <span class="chip-divider">|</span>
+        <span id="header-media-ribbon-badge">🖨️ Ribbon</span>
+      </div>
+      <div class="button-group">
+        <!-- badge para ver si el backend esta disponible (solo en desarrollo) -->
+        <div id="backend-status-badge" class="backend-status-badge status-checking"
+          title="Click para verificar conexión con el backend">
+          <span class="status-dot"></span>
+          <span id="backend-status-text">Backend: Conectando...</span>
         </div>
-        <div class="control-group">
-          <label for="label-height">Alto (in):</label>
-          <input type="number" id="label-height" value="3" min="1" max="20" step="0.1" />
-        </div>
-        <div class="control-group">
-          <label for="label-dpi">DPI:</label>
-          <select id="label-dpi">
-            <option value="203">203 DPI</option>
-            <option value="300">300 DPI</option>
-            <option value="600">600 DPI</option>
-          </select>
-        </div>
-        <div class="button-group">
-          <label class="btn btn-secondary file-upload">
-            <span>Cargar .PRN</span>
-            <input type="file" id="btn-load-prn" accept=".prn,.zpl,.txt" />
-          </label>
-          <button id="btn-export-json" class="btn btn-secondary">Exportar JSON</button>
-          <button id="btn-export-zpl" class="btn btn-primary">Exportar ZPL</button>
+        <label class="btn btn-secondary file-upload">
+          <span>Cargar .PRN</span>
+          <input type="file" id="btn-load-prn" accept=".prn,.zpl,.txt" />
+        </label>
+        <button id="btn-export-json" class="btn btn-secondary">Exportar JSON</button>
+        <button id="btn-export-zpl" class="btn btn-secondary">Exportar ZPL</button>
+        <button id="btn-open-printer-modal" class="btn btn-primary btn-printer-action"
+          title="Abrir panel de conexión e impresión">
+          <span class="btn-icon">🖨️</span>
+          <span>Imprimir / Conectar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-workspace">
+    <!-- Left Sidebar: Tools and Layers -->
+    <aside class="sidebar-left">
+      <div class="sidebar-section">
+        <h2>Herramientas</h2>
+        <div class="tools-grid">
+          <button class="tool-btn" data-tool="text" title="Agregar Texto">
+            <span class="tool-icon">T</span>
+            <span>Texto</span>
+          </button>
+          <button class="tool-btn" data-tool="barcode" title="Agregar Código de Barras">
+            <span class="tool-icon">█</span>
+            <span>Código Barras</span>
+          </button>
+          <button class="tool-btn" data-tool="rect" title="Agregar Rectángulo/Línea">
+            <span class="tool-icon">▬</span>
+            <span>Forma</span>
+          </button>
+          <button class="tool-btn" data-tool="image" title="Subir Imagen">
+            <span class="tool-icon">🖼️</span>
+            <span>Imagen</span>
+          </button>
         </div>
       </div>
-    </header>
 
-    <main class="app-workspace">
-      <!-- Left Sidebar: Tools and Layers -->
-      <aside class="sidebar-left">
-        <div class="sidebar-section">
-          <h2>Herramientas</h2>
-          <div class="tools-grid">
-            <button class="tool-btn" data-tool="text" title="Agregar Texto">
-              <span class="tool-icon">T</span>
-              <span>Texto</span>
-            </button>
-            <button class="tool-btn" data-tool="barcode" title="Agregar Código de Barras">
-              <span class="tool-icon">█</span>
-              <span>Código Barras</span>
-            </button>
-            <button class="tool-btn" data-tool="rect" title="Agregar Rectángulo/Línea">
-              <span class="tool-icon">▬</span>
-              <span>Forma</span>
-            </button>
-            <button class="tool-btn" data-tool="image" title="Subir Imagen">
-              <span class="tool-icon">🖼️</span>
-              <span>Imagen</span>
-            </button>
+      <div class="sidebar-section layers-section">
+        <h2>Capas (Elementos)</h2>
+        <div id="layers-list" class="layers-list">
+          <!-- Dynamic layers will go here -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center: Workspace Canvas -->
+    <section class="canvas-container">
+      <div class="canvas-zoom-controls">
+        <button id="btn-zoom-out">-</button>
+        <span id="zoom-value">100%</span>
+        <button id="btn-zoom-in">+</button>
+        <button id="btn-zoom-fit">Ajustar</button>
+      </div>
+
+      <div class="canvas-scroll-wrapper">
+        <div id="zpl-canvas" class="zpl-canvas">
+          <div id="zpl-canvas-grid" class="zpl-canvas-grid"></div>
+          <!-- Canvas Elements dynamically added here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Sidebar: Properties and Preview -->
+    <aside class="sidebar-right">
+      <div class="tabs-header">
+        <button class="tab-btn active" data-tab="properties">Propiedades</button>
+        <button class="tab-btn" data-tab="preview">Vista Previa</button>
+      </div>
+
+      <div class="tab-content" id="tab-properties">
+        <div id="no-selection-msg" class="info-msg">
+          <p>Selecciona un elemento en el lienzo para editar sus propiedades.</p>
+        </div>
+        <form id="properties-form" class="properties-form hidden">
+          <!-- Property controls generated dynamically or statically -->
+          <div class="form-group">
+            <label for="prop-id">ID Elemento</label>
+            <input type="text" id="prop-id" readonly />
           </div>
-        </div>
 
-        <div class="sidebar-section layers-section">
-          <h2>Capas (Elementos)</h2>
-          <div id="layers-list" class="layers-list">
-            <!-- Dynamic layers will go here -->
-          </div>
-        </div>
-      </aside>
-
-      <!-- Center: Workspace Canvas -->
-      <section class="canvas-container">
-        <div class="canvas-zoom-controls">
-          <button id="btn-zoom-out">-</button>
-          <span id="zoom-value">100%</span>
-          <button id="btn-zoom-in">+</button>
-          <button id="btn-zoom-fit">Ajustar</button>
-        </div>
-        
-        <div class="canvas-scroll-wrapper">
-          <div id="zpl-canvas" class="zpl-canvas">
-            <div id="zpl-canvas-grid" class="zpl-canvas-grid"></div>
-            <!-- Canvas Elements dynamically added here -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Right Sidebar: Properties and Preview -->
-      <aside class="sidebar-right">
-        <div class="tabs-header">
-          <button class="tab-btn active" data-tab="properties">Propiedades</button>
-          <button class="tab-btn" data-tab="preview">Vista Previa</button>
-        </div>
-
-        <div class="tab-content" id="tab-properties">
-          <div id="no-selection-msg" class="info-msg">
-            <p>Selecciona un elemento en el lienzo para editar sus propiedades.</p>
-          </div>
-          <form id="properties-form" class="properties-form hidden">
-            <!-- Property controls generated dynamically or statically -->
+          <div class="form-row">
             <div class="form-group">
-              <label for="prop-id">ID Elemento</label>
-              <input type="text" id="prop-id" readonly />
+              <label for="prop-x">Posición X (dots)</label>
+              <input type="number" id="prop-x" min="0" />
+            </div>
+            <div class="form-group">
+              <label for="prop-y">Posición Y (dots)</label>
+              <input type="number" id="prop-y" min="0" />
+            </div>
+          </div>
+
+          <div class="form-row text-props-only">
+            <div class="form-group">
+              <label for="prop-font-size-h">Tamaño H (dots)</label>
+              <input type="number" id="prop-font-size-h" min="5" />
+            </div>
+            <div class="form-group">
+              <label for="prop-font-size-w">Tamaño W (dots)</label>
+              <input type="number" id="prop-font-size-w" min="5" />
+            </div>
+          </div>
+
+          <div class="form-row barcode-props-only">
+            <div class="form-group">
+              <label for="prop-bc-height">Alto Barras (dots)</label>
+              <input type="number" id="prop-bc-height" min="10" />
+            </div>
+            <div class="form-group">
+              <label for="prop-bc-ratio">Ancho Módulo</label>
+              <input type="number" id="prop-bc-ratio" min="1" max="10" />
+            </div>
+          </div>
+
+          <div class="form-group text-or-bc-props">
+            <label for="prop-content">Contenido</label>
+            <textarea id="prop-content" rows="3"></textarea>
+            <span class="help-text">Usa <code>{{variable}}</code> para campos dinámicos.</span>
+          </div>
+
+          <div class="form-row text-props-only">
+            <div class="form-group-checkbox">
+              <input type="checkbox" id="prop-sequential" />
+              <label for="prop-sequential">¿Numeración Secuencial?</label>
+            </div>
+          </div>
+
+          <div class="form-group sequential-props hidden">
+            <label for="prop-seq-start">Valor Inicial</label>
+            <input type="number" id="prop-seq-start" value="1" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="prop-rotation">Rotación</label>
+              <select id="prop-rotation">
+                <option value="N">Normal (0°)</option>
+                <option value="R">Rotado (90°)</option>
+                <option value="I">Invertido (180°)</option>
+                <option value="B">Rotado (270°)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <button type="button" id="btn-delete-element" class="btn btn-danger">Eliminar Elemento</button>
+          </div>
+        </form>
+
+        <!-- Media Specification Card / Hardware Settings -->
+        <div class="sidebar-section media-specs-section">
+          <div class="section-title-with-actions">
+            <h2>Ficha Técnica del Papel</h2>
+            <span class="stats-badge" id="media-dots-badge">812 x 609 dots</span>
+          </div>
+
+          <div class="media-specs-grid">
+            <div class="form-group">
+              <label for="select-media-tracking">Sensor de Papel (^MN):</label>
+              <select id="select-media-tracking" class="spec-select">
+                <option value="gap">Hueco / Gap (^MNY)</option>
+                <option value="black_mark">Marca Negra (^MNM)</option>
+                <option value="continuous">Continuo (^MNN)</option>
+                <option value="auto">Automático (^MNA)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="select-media-type">Tipo de Impresión (^MT):</label>
+              <select id="select-media-type" class="spec-select">
+                <option value="thermal_transfer">Con Cinta Ribbon / Transferencia (^MTT)</option>
+                <option value="direct_thermal">Térmica Directa / Sin Ribbon (^MTD)</option>
+              </select>
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label for="prop-x">Posición X (dots)</label>
-                <input type="number" id="prop-x" min="0" />
-              </div>
-              <div class="form-group">
-                <label for="prop-y">Posición Y (dots)</label>
-                <input type="number" id="prop-y" min="0" />
-              </div>
-            </div>
-
-            <div class="form-row text-props-only">
-              <div class="form-group">
-                <label for="prop-font-size-h">Tamaño H (dots)</label>
-                <input type="number" id="prop-font-size-h" min="5" />
-              </div>
-              <div class="form-group">
-                <label for="prop-font-size-w">Tamaño W (dots)</label>
-                <input type="number" id="prop-font-size-w" min="5" />
-              </div>
-            </div>
-
-            <div class="form-row barcode-props-only">
-              <div class="form-group">
-                <label for="prop-bc-height">Alto Barras (dots)</label>
-                <input type="number" id="prop-bc-height" min="10" />
-              </div>
-              <div class="form-group">
-                <label for="prop-bc-ratio">Ancho Módulo</label>
-                <input type="number" id="prop-bc-ratio" min="1" max="10" />
-              </div>
-            </div>
-
-            <div class="form-group text-or-bc-props">
-              <label for="prop-content">Contenido</label>
-              <textarea id="prop-content" rows="3"></textarea>
-              <span class="help-text">Usa <code>{{variable}}</code> para campos dinámicos.</span>
-            </div>
-
-            <div class="form-row text-props-only">
-              <div class="form-group-checkbox">
-                <input type="checkbox" id="prop-sequential" />
-                <label for="prop-sequential">¿Numeración Secuencial?</label>
-              </div>
-            </div>
-
-            <div class="form-group sequential-props hidden">
-              <label for="prop-seq-start">Valor Inicial</label>
-              <input type="number" id="prop-seq-start" value="1" />
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="prop-rotation">Rotación</label>
-                <select id="prop-rotation">
-                  <option value="N">Normal (0°)</option>
-                  <option value="R">Rotado (90°)</option>
-                  <option value="I">Invertido (180°)</option>
-                  <option value="B">Rotado (270°)</option>
+                <label for="select-print-mode">Modo de Salida (^MM):</label>
+                <select id="select-print-mode" class="spec-select">
+                  <option value="tear_off">Arrancar (^MMT)</option>
+                  <option value="cutter">Guillotina (^MMC)</option>
+                  <option value="peel_off">Despegador (^MMP)</option>
+                  <option value="rewind">Rebobinado (^MMR)</option>
                 </select>
               </div>
-            </div>
 
-            <div class="form-row">
-              <button type="button" id="btn-delete-element" class="btn btn-danger">Eliminar Elemento</button>
+              <div class="form-group" style="max-width: 90px;">
+                <label for="input-media-darkness">Oscuridad (~SD):</label>
+                <input type="number" id="input-media-darkness" min="0" max="30" value="23" />
+              </div>
             </div>
-          </form>
+          </div>
+        </div>
 
-          <!-- Raw ZPL Realtime Output -->
-          <div class="sidebar-section raw-zpl-section">
+        <!-- Raw ZPL Realtime Output with Linter & Validator -->
+        <div class="sidebar-section raw-zpl-section">
+          <div class="section-title-with-actions">
             <h2>Código ZPL Generado</h2>
-            <textarea id="zpl-output" readonly></textarea>
-          </div>
-        </div>
-
-        <div class="tab-content hidden" id="tab-preview">
-          <div style="margin-bottom: 16px; display: flex; gap: 8px;">
-            <button id="btn-open-modal" class="btn btn-secondary" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
-              <span>🔍</span> Ver en Grande
-            </button>
-            <button id="btn-toggle-rotate-tab" class="btn btn-secondary" title="Girar Vista 180°" style="display: flex; align-items: center; gap: 4px;">
-              <span>🔄</span> 180°
-            </button>
-          </div>
-
-          <div class="preview-variables-section hidden" id="preview-variables-container">
-            <h3>Valores de Prueba</h3>
-            <div id="preview-variables-inputs" class="variables-inputs">
-              <!-- Dynamically populated test inputs for variables -->
+            <div class="zpl-val-badge val-valid" id="zpl-sidebar-status-badge">
+              <span class="val-dot"></span>
+              <span id="zpl-sidebar-status-text">ZPL Válido</span>
             </div>
           </div>
 
-          <div class="preview-render-area">
-            <div id="local-preview-canvas"></div>
+          <div class="zpl-tools-bar">
+            <button type="button" id="btn-validate-zpl" class="btn-micro" title="Volver a validar código">
+              <span>🔍</span> Validar
+            </button>
+            <button type="button" id="btn-autofix-zpl" class="btn-micro btn-autofix"
+              title="Corregir automáticamente errores de estructura y delimitadores">
+              <span>🪄</span> Auto-corregir
+            </button>
+            <button type="button" id="btn-copy-zpl" class="btn-micro" title="Copiar código ZPL al portapapeles">
+              <span>📋</span> Copiar
+            </button>
           </div>
-        </div>
-      </aside>
-    </main>
 
-    <!-- Modal for fullscreen preview -->
-    <div id="preview-modal" class="modal hidden">
-      <div class="modal-backdrop" id="modal-backdrop"></div>
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Vista Previa de Impresión Ampliada</h2>
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <button id="btn-toggle-rotate" class="btn btn-secondary" style="font-size: 12px; height: 32px;">🔄 Rotar 180°</button>
-            <button id="btn-close-modal" class="btn-close">&times;</button>
+          <textarea id="zpl-output" spellcheck="false"></textarea>
+
+          <!-- Diagnostics Drawer -->
+          <div class="zpl-diagnostics-container" id="zpl-diagnostics-container">
+            <div class="diagnostics-header" id="diagnostics-toggle">
+              <span class="diagnostics-title">Diagnóstico de Sintaxis (<span id="diagnostics-count">0</span>)</span>
+              <span id="diagnostics-arrow" class="diagnostics-arrow">▼</span>
+            </div>
+            <div class="diagnostics-list" id="diagnostics-list">
+              <div class="diag-item diag-clean">
+                <span>✅ No se detectaron errores de sintaxis en el código ZPL.</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="modal-body">
-          <div id="modal-preview-canvas-container">
-            <div id="modal-preview-canvas"></div>
+      </div>
+
+      <div class="tab-content hidden" id="tab-preview">
+        <div style="margin-bottom: 16px; display: flex; gap: 8px;">
+          <button id="btn-open-modal" class="btn btn-secondary"
+            style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <span>🔍</span> Ver en Grande
+          </button>
+          <button id="btn-toggle-rotate-tab" class="btn btn-secondary" title="Girar Vista 180°"
+            style="display: flex; align-items: center; gap: 4px;">
+            <span>🔄</span> 180°
+          </button>
+        </div>
+
+        <div class="preview-variables-section hidden" id="preview-variables-container">
+          <h3>Valores de Prueba</h3>
+          <div id="preview-variables-inputs" class="variables-inputs">
+            <!-- Dynamically populated test inputs for variables -->
+          </div>
+        </div>
+
+        <div class="preview-render-area">
+          <div id="local-preview-canvas"></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Modal for fullscreen preview -->
+  <div id="preview-modal" class="modal hidden">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Vista Previa de Impresión Ampliada</h2>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button id="btn-toggle-rotate" class="btn btn-secondary" style="font-size: 12px; height: 32px;">🔄 Rotar
+            180°</button>
+          <button id="btn-close-modal" class="btn-close">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div id="modal-preview-canvas-container">
+          <div id="modal-preview-canvas"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Printer Connection & Direct Printing -->
+  <div id="printer-modal" class="modal hidden">
+    <div class="modal-backdrop" id="printer-modal-backdrop"></div>
+    <div class="modal-content printer-modal-dialog">
+      <div class="modal-header">
+        <div class="printer-modal-title">
+          <span class="printer-modal-icon">🖨️</span>
+          <div>
+            <h2>Centro de Impresión y Conexión</h2>
+            <p class="printer-modal-subtitle">Gestiona impresoras USB, de Red (TCP/IP) y envía etiquetas ZPL</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div id="modal-backend-status" class="backend-status-badge status-checking">
+            <span class="status-dot"></span>
+            <span id="modal-backend-status-text">Comprobando API...</span>
+          </div>
+          <button id="btn-recheck-backend" class="btn btn-icon-only" title="Reverificar estado del servidor">🔄</button>
+          <button id="btn-close-printer-modal" class="btn-close">&times;</button>
+        </div>
+      </div>
+
+      <div class="modal-body printer-modal-body">
+        <!-- Connection Tabs -->
+        <div class="printer-conn-tabs">
+          <button class="conn-tab-btn active" data-tab="conn-usb">
+            <span class="tab-icon">🔌</span>
+            <span>Impresora USB (Windows)</span>
+          </button>
+          <button class="conn-tab-btn" data-tab="conn-tcp">
+            <span class="tab-icon">🌐</span>
+            <span>Red Ethernet / Wi-Fi (TCP)</span>
+          </button>
+          <button class="conn-tab-btn" data-tab="conn-api">
+            <span class="tab-icon">⚡</span>
+            <span>Generador Backend</span>
+          </button>
+        </div>
+
+        <!-- USB Section -->
+        <div id="conn-usb" class="conn-tab-content">
+          <div class="conn-config-card">
+            <div class="card-header-row">
+              <label for="select-usb-printer" class="card-title">Seleccionar Impresora Instalada:</label>
+              <button id="btn-refresh-printers" class="btn btn-secondary btn-sm">
+                <span>🔄</span> Actualizar Lista
+              </button>
+            </div>
+            <div class="select-wrapper">
+              <select id="select-usb-printer" class="printer-select">
+                <option value="">Cargando impresoras disponibles...</option>
+              </select>
+            </div>
+            <div id="usb-printer-count" class="printer-hint-text">
+              Detectando dispositivos conectados...
+            </div>
+          </div>
+        </div>
+
+        <!-- TCP Section -->
+        <div id="conn-tcp" class="conn-tab-content hidden">
+          <div class="conn-config-card">
+            <div class="form-row">
+              <div class="form-group flex-2">
+                <label for="input-tcp-host">Dirección IP o Host:</label>
+                <input type="text" id="input-tcp-host" placeholder="Ej: 192.168.1.100 o localhost" value="127.0.0.1" />
+              </div>
+              <div class="form-group flex-1">
+                <label for="input-tcp-port">Puerto TCP:</label>
+                <input type="number" id="input-tcp-port" value="9100" min="1" max="65535" />
+              </div>
+            </div>
+            <div class="quick-hosts-row">
+              <span class="quick-hosts-label">Acceso Rápido:</span>
+              <button type="button" class="btn-chip" data-host="127.0.0.1" data-port="9100">localhost (9100)</button>
+              <button type="button" class="btn-chip" data-host="192.168.1.100" data-port="9100">192.168.1.100</button>
+              <button type="button" class="btn-chip" data-host="192.168.0.100" data-port="9100">192.168.0.100</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backend API Generator Section -->
+        <div id="conn-api" class="conn-tab-content hidden">
+          <div class="conn-config-card">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="api-product-name">Nombre del Producto:</label>
+                <input type="text" id="api-product-name" placeholder="Ej: CAJA DE TORNILLOS 2X4"
+                  value="PRODUCTO ZEBRA PRO" />
+              </div>
+              <div class="form-group">
+                <label for="api-product-code">Código de Barras / SKU:</label>
+                <input type="text" id="api-product-code" placeholder="Ej: 750123456789" value="SKU-8849201" />
+              </div>
+            </div>
+            <button id="btn-generate-api-zpl" class="btn btn-secondary btn-sm" style="margin-top: 8px;">
+              <span>⚡</span> Generar ZPL desde Backend API
+            </button>
+          </div>
+        </div>
+
+        <!-- Print Configuration Row -->
+        <div class="print-options-grid">
+          <div class="form-group" style="max-width: 140px;">
+            <label for="input-print-copies">Copias:</label>
+            <input type="number" id="input-print-copies" value="1" min="1" max="999" />
+          </div>
+          <div class="form-group flex-1">
+            <label>Origen de la Etiqueta:</label>
+            <div class="radio-pill-group">
+              <label class="radio-pill">
+                <input type="radio" name="zpl-source-mode" value="designer" checked />
+                <span>Diseñador Actual (<span id="designer-elements-count">0</span> el.)</span>
+              </label>
+              <label class="radio-pill">
+                <input type="radio" name="zpl-source-mode" value="manual" />
+                <span>Editor ZPL Manual</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZPL Preview / Edit in Modal -->
+        <div class="print-zpl-preview-section">
+          <div class="section-sub-header">
+            <span class="card-title">Código ZPL a Transmitir:</span>
+            <span id="print-zpl-stats" class="stats-badge">0 bytes | 0 líneas</span>
+          </div>
+          <textarea id="modal-zpl-preview" class="zpl-modal-textarea" rows="5" spellcheck="false"></textarea>
+        </div>
+
+        <!-- Pre-flight ZPL Validation Card in Modal -->
+        <div id="print-preflight-banner" class="preflight-banner banner-valid">
+          <div class="banner-icon-text">
+            <span id="preflight-icon" class="preflight-icon">✅</span>
+            <div class="preflight-details">
+              <strong id="preflight-title">Pre-flight ZPL: Sintaxis Verificada</strong>
+              <p id="preflight-desc">La estructura del código es válida y segura para transmitir a la impresora.</p>
+            </div>
+          </div>
+          <button type="button" id="btn-preflight-fix" class="btn btn-sm btn-autofix hidden">
+            <span>🪄</span> Auto-corregir
+          </button>
+        </div>
+
+        <!-- Actions Footer -->
+        <div class="printer-modal-actions">
+          <div class="actions-left">
+            <button id="btn-test-print" class="btn btn-secondary">
+              <span>🧪</span> Imprimir Prueba
+            </button>
+          </div>
+          <div class="actions-right">
+            <button id="btn-cancel-print" class="btn btn-secondary">Cerrar</button>
+            <button id="btn-send-print" class="btn btn-primary btn-send-now">
+              <span class="send-spinner hidden" id="send-spinner">⏳</span>
+              <span class="send-icon" id="send-icon">🚀</span>
+              <span id="send-btn-label">Enviar a Impresora</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Activity History / Logs -->
+        <div class="print-logs-section">
+          <div class="logs-header" id="toggle-logs-header">
+            <span class="logs-title">📋 Registro de Operaciones Recientes</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button id="btn-clear-logs" class="btn-text-sm">Limpiar</button>
+              <span id="logs-arrow" class="logs-arrow">▼</span>
+            </div>
+          </div>
+          <div id="print-logs-list" class="logs-list">
+            <div class="log-item empty-log">No hay registros de impresión en esta sesión.</div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Hidden image upload helper -->
-    <input type="file" id="image-upload-helper" accept="image/png, image/jpeg" style="display: none;" />
+  <!-- Toast Notifications Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+  <!-- Hidden image upload helper -->
+  <input type="file" id="image-upload-helper" accept="image/png, image/jpeg" style="display: none;" />
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>

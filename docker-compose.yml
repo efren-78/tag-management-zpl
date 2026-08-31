@@ -1,6 +1,6 @@
 services:
 
-  #1. Frontend: Donde interactua el usuario. Por defecto en el puerto 80.
+  #1. Frontend: Donde interactua el usuario. Vite dev en puerto 3000.
   frontend:
     build:
       context: ./frontend
@@ -10,12 +10,15 @@ services:
     container_name: label-printer-frontend
     restart: unless-stopped
 
-  #2. Backend: Donde se procesan las etiquetas. Por defecto en el puerto 80.
+  #2. Backend: API REST para procesamiento de etiquetas y comunicación con impresoras.
   backend:
     build:
       context: ./backend/src/LabelPrinterMVP
       dockerfile: Dockerfile
+    ports:
+      - "5000:8080"
     container_name: label-printer-backend
-    # Permite interactuar con la aplicación de consola mediante terminal
-    stdin_open: true
-    tty: true
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Development

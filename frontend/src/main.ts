@@ -19,6 +19,8 @@ import {
   updateCanvasDimensions,
   updateZoom,
 } from './ui/canvasManager';
+import { initHistoryUI, recordSnapshot } from './services/historyManager';
+import { initShortcutManager } from './services/shortcutManager';
 
 // Expose dependencies to window for offline rendering
 (window as any).bwipjs = bwipjs;
@@ -48,7 +50,9 @@ const mediaDotsBadge = document.getElementById('media-dots-badge');
 const selectMediaTracking = document.getElementById('select-media-tracking') as HTMLSelectElement;
 const selectMediaType = document.getElementById('select-media-type') as HTMLSelectElement;
 const selectPrintMode = document.getElementById('select-print-mode') as HTMLSelectElement;
+const selectPrintSpeed = document.getElementById('select-print-speed') as HTMLSelectElement;
 const inputMediaDarkness = document.getElementById('input-media-darkness') as HTMLInputElement;
+const inputTopOffset = document.getElementById('input-top-offset') as HTMLInputElement;
 
 /**
  * Updates header badges and media specifications card.
@@ -68,31 +72,40 @@ export function syncMediaConfigUI() {
 
   if (headerMediaTypeBadge) {
     switch (state.mediaConfig.mediaTracking) {
+      case 'web':
+        headerMediaTypeBadge.textContent = '📜 Sensor Web (^MNW)';
+        break;
       case 'continuous':
-        headerMediaTypeBadge.textContent = '📜 Continuo';
+        headerMediaTypeBadge.textContent = '📜 Continuo (^MNN)';
         break;
       case 'black_mark':
-        headerMediaTypeBadge.textContent = '📜 Marca Negra';
+        headerMediaTypeBadge.textContent = '📜 Marca Negra (^MNM)';
         break;
       case 'auto':
-        headerMediaTypeBadge.textContent = '📜 Auto';
+        headerMediaTypeBadge.textContent = '📜 Auto (^MNA)';
         break;
       default:
-        headerMediaTypeBadge.textContent = '📜 Hueco (Gap)';
+        headerMediaTypeBadge.textContent = '📜 Hueco / Gap (^MNY)';
         break;
     }
   }
 
   if (headerMediaRibbonBadge) {
     headerMediaRibbonBadge.textContent =
-      state.mediaConfig.mediaType === 'direct_thermal' ? '🖨️ Térmica Directa' : '🖨️ Con Ribbon';
+      state.mediaConfig.mediaType === 'direct_thermal' ? '🖨️ Térmica Directa (^MTD)' : '🖨️ Con Ribbon (^MTT)';
   }
 
   if (selectMediaTracking) selectMediaTracking.value = state.mediaConfig.mediaTracking;
   if (selectMediaType) selectMediaType.value = state.mediaConfig.mediaType;
   if (selectPrintMode) selectPrintMode.value = state.mediaConfig.printMode;
+  if (selectPrintSpeed && state.mediaConfig.printSpeed) {
+    selectPrintSpeed.value = state.mediaConfig.printSpeed.toString();
+  }
   if (inputMediaDarkness && state.mediaConfig.darkness !== undefined) {
     inputMediaDarkness.value = state.mediaConfig.darkness.toString();
+  }
+  if (inputTopOffset && state.mediaConfig.topOffsetDots !== undefined) {
+    inputTopOffset.value = state.mediaConfig.topOffsetDots.toString();
   }
 }
 
@@ -143,6 +156,7 @@ function init() {
     onZplUpdate: (newZpl) => {
       state.loadedRawZpl = newZpl;
       if (zplOutput) zplOutput.value = newZpl;
+      recordSnapshot();
       syncModalZpl();
       updateLocalPreview();
     },
@@ -151,12 +165,29 @@ function init() {
   initPreviewManager();
   initPrinterModal();
 
+  initHistoryUI({
+    onStateRestored: () => {
+      updateCanvasDimensions();
+      renderAll();
+    },
+  });
+
+  initShortcutManager({
+    onStateRestored: () => {
+      updateCanvasDimensions();
+      renderAll();
+    },
+  });
+
   // 2. Attach Global Header & Dimension Listeners
   inputWidth.addEventListener('input', () => {
     state.widthInches = parseFloat(inputWidth.value) || 4;
     state.loadedRawZpl = null;
     updateCanvasDimensions();
     renderAll();
+  });
+  inputWidth.addEventListener('change', () => {
+    recordSnapshot();
   });
 
   inputHeight.addEventListener('input', () => {
@@ -165,12 +196,16 @@ function init() {
     updateCanvasDimensions();
     renderAll();
   });
+  inputHeight.addEventListener('change', () => {
+    recordSnapshot();
+  });
 
   selectDpi.addEventListener('change', () => {
     state.dpi = parseInt(selectDpi.value, 10) || 203;
     state.loadedRawZpl = null;
     updateCanvasDimensions();
     renderAll();
+    recordSnapshot();
   });
 
   // Zoom Controls
@@ -201,6 +236,7 @@ function init() {
   selectMediaTracking?.addEventListener('change', () => {
     state.mediaConfig.mediaTracking = selectMediaTracking.value as any;
     state.loadedRawZpl = null;
+    recordSnapshot();
     renderAll();
     showToast('Sensor de Papel Actualizado', `Configurado como ${selectMediaTracking.options[selectMediaTracking.selectedIndex].text}`, 'info');
   });
@@ -208,6 +244,7 @@ function init() {
   selectMediaType?.addEventListener('change', () => {
     state.mediaConfig.mediaType = selectMediaType.value as any;
     state.loadedRawZpl = null;
+    recordSnapshot();
     renderAll();
     showToast('Tipo de Impresión Actualizado', `Configurado como ${selectMediaType.options[selectMediaType.selectedIndex].text}`, 'info');
   });
@@ -215,15 +252,39 @@ function init() {
   selectPrintMode?.addEventListener('change', () => {
     state.mediaConfig.printMode = selectPrintMode.value as any;
     state.loadedRawZpl = null;
+    recordSnapshot();
     renderAll();
   });
 
-  inputMediaDarkness?.addEventListener('input', () => {
+  selectPrintSpeed?.addEventListener('change', () => {
+    const speed = parseInt(selectPrintSpeed.value, 10);
+    if (!isNaN(speed)) {
+      state.mediaConfig.printSpeed = speed;
+      state.loadedRawZpl = null;
+      recordSnapshot();
+      renderAll();
+      showToast('Velocidad Actualizada', `Configurada como ${speed} ips (^PR${speed})`, 'info');
+    }
+  });
+
+  inputMediaDarkness?.addEventListener('change', () => {
     const val = parseInt(inputMediaDarkness.value, 10);
     if (!isNaN(val)) {
       state.mediaConfig.darkness = val;
       state.loadedRawZpl = null;
+      recordSnapshot();
       renderAll();
+    }
+  });
+
+  inputTopOffset?.addEventListener('change', () => {
+    const val = parseInt(inputTopOffset.value, 10);
+    if (!isNaN(val)) {
+      state.mediaConfig.topOffsetDots = val;
+      state.loadedRawZpl = null;
+      recordSnapshot();
+      renderAll();
+      showToast('Offset Superior Actualizado', `Configurado a ${val} dots (^LT${val})`, 'info');
     }
   });
 
@@ -251,6 +312,7 @@ function init() {
           state.loadedRawZpl = text;
           state.selectedElementId = null;
 
+          recordSnapshot();
           updateCanvasDimensions();
           renderAll();
 

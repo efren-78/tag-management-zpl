@@ -129,6 +129,44 @@ body {
   gap: 8px;
 }
 
+.history-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-input);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.btn-history-action {
+  padding: 6px 12px;
+  height: 30px;
+  font-size: 12px;
+  background-color: transparent;
+  border: none;
+  color: var(--text-primary);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-history-action:hover:not(:disabled) {
+  background-color: var(--border);
+  color: #ffffff;
+}
+
+.btn:disabled,
+.btn.btn-disabled,
+button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  filter: grayscale(0.9);
+  transform: none !important;
+}
+
 /* Button styles */
 .btn {
   display: inline-flex;
@@ -639,6 +677,21 @@ body {
 
 .form-row .form-group {
   flex: 1;
+}
+
+.element-actions-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.element-actions-row .btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
 }
 
 .properties-form input, 

@@ -26,12 +26,12 @@ export interface LabelElement {
 }
 
 export interface ZplMediaConfig {
-  mediaTracking: 'gap' | 'black_mark' | 'continuous' | 'auto'; // ^MN
-  mediaType: 'thermal_transfer' | 'direct_thermal';             // ^MT
-  printMode: 'tear_off' | 'cutter' | 'peel_off' | 'rewind';     // ^MM
-  printSpeed?: number;                                          // ^PR
-  darkness?: number;                                            // ~SD
-  topOffsetDots?: number;                                       // ^LT
+  mediaTracking: 'gap' | 'web' | 'black_mark' | 'continuous' | 'auto'; // ^MN: MNY, MNW, MNM, MNN, MNA
+  mediaType: 'thermal_transfer' | 'direct_thermal';                   // ^MT: MTT, MTD
+  printMode: 'tear_off' | 'cutter' | 'peel_off' | 'rewind';           // ^MM: MMT, MMC, MMP, MMR
+  printSpeed?: number;                                                // ^PR (2, 3, 4, 6, 8, 10, 12, 14 ips)
+  darkness?: number;                                                  // ~SD (0 - 30)
+  topOffsetDots?: number;                                             // ^LT (puntos de desplazamiento)
 }
 
 export interface ParsedZpl {

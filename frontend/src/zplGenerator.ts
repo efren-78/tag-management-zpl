@@ -31,7 +31,9 @@ export function generateZplCode(
   zpl += `^LT${mediaConfig?.topOffsetDots !== undefined ? mediaConfig.topOffsetDots : 15}\n`;
 
   // Media tracking ^MN
-  if (mediaConfig?.mediaTracking === 'continuous') {
+  if (mediaConfig?.mediaTracking === 'web') {
+    zpl += '^MNW\n';
+  } else if (mediaConfig?.mediaTracking === 'continuous') {
     zpl += '^MNN\n';
   } else if (mediaConfig?.mediaTracking === 'black_mark') {
     zpl += '^MNM\n';

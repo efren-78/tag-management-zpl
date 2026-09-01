@@ -240,7 +240,7 @@ export async function loadUsbPrinters(silent: boolean = false): Promise<void> {
 
     if (usbPrintersList.length === 0) {
       selectUsbPrinter.innerHTML = '<option value="">No se encontraron impresoras en el sistema</option>';
-      if (usbPrinterCount) usbPrinterCount.textContent = '⚠️ No hay impresoras detectadas en el servidor Windows.';
+      if (usbPrinterCount) usbPrinterCount.textContent = ' No hay impresoras detectadas en el servidor Windows.';
       if (!silent) {
         showToast('Sin impresoras', 'No se encontraron impresoras instaladas en el servidor.', 'info');
       }
@@ -261,14 +261,14 @@ export async function loadUsbPrinters(silent: boolean = false): Promise<void> {
     });
 
     if (usbPrinterCount) {
-      usbPrinterCount.textContent = `✅ ${usbPrintersList.length} impresora(s) detectada(s) en Windows.`;
+      usbPrinterCount.textContent = ` ${usbPrintersList.length} impresora(s) detectada(s) en Windows.`;
     }
     if (!silent) {
       showToast('Impresoras Actualizadas', `Se encontraron ${usbPrintersList.length} impresoras instaladas.`, 'success');
     }
   } catch (err: any) {
     selectUsbPrinter.innerHTML = '<option value="">Error al listar impresoras</option>';
-    if (usbPrinterCount) usbPrinterCount.textContent = '❌ Error de comunicación con el backend.';
+    if (usbPrinterCount) usbPrinterCount.textContent = ' Error de comunicación con el backend.';
     if (!silent) {
       showToast('Error', err.message || 'No se pudieron listar las impresoras USB/Spooler.', 'error');
     }
@@ -326,7 +326,7 @@ async function handleSendPrint() {
 
   // Pre-flight check
   if (latestValidationReport && latestValidationReport.hasErrors) {
-    const proceed = confirm(`⚠️ Atención: El código ZPL tiene ${latestValidationReport.errorCount} error(es) de sintaxis que podrían fallar en la impresora.\n\n¿Deseas intentar imprimir de todos modos?`);
+    const proceed = confirm(`Atención: El código ZPL tiene ${latestValidationReport.errorCount} error(es) de sintaxis que podrían fallar en la impresora.\n\n¿Deseas intentar imprimir de todos modos?`);
     if (!proceed) return;
   }
 
@@ -355,8 +355,8 @@ async function handleSendPrint() {
       showToast('Modo API', 'Usa el botón "Generar ZPL desde Backend API" para probar este modo.', 'info');
     }
   } catch (err: any) {
-    const target = currentConnTab === 'conn-usb' 
-      ? (document.getElementById('select-usb-printer') as HTMLSelectElement)?.value || 'USB' 
+    const target = currentConnTab === 'conn-usb'
+      ? (document.getElementById('select-usb-printer') as HTMLSelectElement)?.value || 'USB'
       : (document.getElementById('input-tcp-host') as HTMLInputElement)?.value || 'TCP';
     addPrintLog(target, false, err.message || 'Error desconocido.');
     showToast('Fallo de Impresión', err.message || 'No se pudo enviar la etiqueta a la impresora.', 'error');

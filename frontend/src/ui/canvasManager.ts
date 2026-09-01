@@ -2,6 +2,8 @@ import { state } from '../state';
 import type { LabelElement } from '../types';
 import { convertImageToZplHex } from '../imageConverter';
 import { showToast } from './toast';
+import { recordSnapshot } from '../services/historyManager';
+import { duplicateSelectedElement } from '../services/shortcutManager';
 
 // Drag & drop and resize interaction state
 let isDragging = false;
@@ -27,6 +29,7 @@ export function initCanvasManager(cb: CanvasManagerCallbacks) {
   const zplCanvasGrid = document.getElementById('zpl-canvas-grid') as HTMLDivElement;
   const imageUploadHelper = document.getElementById('image-upload-helper') as HTMLInputElement;
   const btnDeleteElement = document.getElementById('btn-delete-element') as HTMLButtonElement;
+  const btnDuplicateElement = document.getElementById('btn-duplicate-element') as HTMLButtonElement;
   const propSequential = document.getElementById('prop-sequential') as HTMLInputElement;
   const seqPropsGroup = document.querySelector('.sequential-props') as HTMLDivElement;
 
@@ -69,6 +72,7 @@ export function initCanvasManager(cb: CanvasManagerCallbacks) {
               });
               state.selectedElementId = id;
               state.loadedRawZpl = null;
+              recordSnapshot();
               renderCanvas();
               managerCallbacks?.onCanvasChange();
               showToast('Imagen Añadida', 'Se convirtió a formato nativo ^GF de Zebra.', 'success');
@@ -106,9 +110,17 @@ export function initCanvasManager(cb: CanvasManagerCallbacks) {
       state.elements = state.elements.filter((el) => el.id !== state.selectedElementId);
       state.selectedElementId = null;
       state.loadedRawZpl = null;
+      recordSnapshot();
       renderCanvas();
       managerCallbacks?.onCanvasChange();
     }
+  });
+
+  btnDuplicateElement?.addEventListener('click', () => {
+    duplicateSelectedElement(() => {
+      renderCanvas();
+      managerCallbacks?.onCanvasChange();
+    });
   });
 
   // Global mouse listeners for Drag & Drop and Resizing
@@ -292,6 +304,7 @@ export function addElement(type: string) {
   state.elements.push(newEl);
   state.selectedElementId = id;
   state.loadedRawZpl = null;
+  recordSnapshot();
   renderCanvas();
   managerCallbacks?.onCanvasChange();
 }
@@ -349,6 +362,16 @@ function handleMouseMove(e: MouseEvent) {
 
 function handleMouseUp() {
   if (isDragging || isResizing) {
+    const el = state.elements.find((item) => item.id === dragElementId);
+    if (
+      el &&
+      (el.x !== originalX ||
+        el.y !== originalY ||
+        el.width !== originalWidth ||
+        el.height !== originalHeight)
+    ) {
+      recordSnapshot();
+    }
     isDragging = false;
     isResizing = false;
     dragElementId = null;
@@ -439,6 +462,7 @@ export function updateSelectedElementProperties() {
   }
 
   state.loadedRawZpl = null;
+  recordSnapshot();
   renderCanvas();
   managerCallbacks?.onCanvasChange();
 }
@@ -469,12 +493,23 @@ export function updateLayersList() {
         <span class="layer-name" title="${label}">${label}</span>
       </div>
       <div class="layer-actions">
-        <button class="layer-btn delete" title="Eliminar">🗑️</button>
+        <button class="layer-btn duplicate" title="Duplicar elemento (Ctrl + D)">📋</button>
+        <button class="layer-btn delete" title="Eliminar elemento (Supr)">🗑️</button>
       </div>
     `;
 
     item.addEventListener('click', () => {
       selectElement(el.id);
+    });
+
+    const dupBtn = item.querySelector('.layer-btn.duplicate');
+    dupBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectElement(el.id);
+      duplicateSelectedElement(() => {
+        renderCanvas();
+        managerCallbacks?.onCanvasChange();
+      });
     });
 
     const delBtn = item.querySelector('.layer-btn.delete');
@@ -483,6 +518,7 @@ export function updateLayersList() {
       state.elements = state.elements.filter((itemEl) => itemEl.id !== el.id);
       if (state.selectedElementId === el.id) state.selectedElementId = null;
       state.loadedRawZpl = null;
+      recordSnapshot();
       renderCanvas();
       managerCallbacks?.onCanvasChange();
     });

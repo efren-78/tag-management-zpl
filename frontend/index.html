@@ -45,6 +45,16 @@
         <span class="chip-divider">|</span>
         <span id="header-media-ribbon-badge">🖨️ Ribbon</span>
       </div>
+      <div class="history-group">
+        <button id="btn-undo" class="btn btn-secondary btn-history-action" title="Deshacer (Ctrl + Z)" disabled>
+          <span class="btn-icon">↩️</span>
+          <span>Deshacer</span>
+        </button>
+        <button id="btn-redo" class="btn btn-secondary btn-history-action" title="Rehacer (Ctrl + Y)" disabled>
+          <span class="btn-icon">↪️</span>
+          <span>Rehacer</span>
+        </button>
+      </div>
       <div class="button-group">
         <!-- badge para ver si el backend esta disponible (solo en desarrollo) -->
         <div id="backend-status-badge" class="backend-status-badge status-checking"
@@ -198,8 +208,15 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <button type="button" id="btn-delete-element" class="btn btn-danger">Eliminar Elemento</button>
+          <div class="form-row element-actions-row">
+            <button type="button" id="btn-duplicate-element" class="btn btn-secondary" title="Duplicar elemento (Ctrl + D)">
+              <span class="btn-icon">📋</span>
+              <span>Duplicar</span>
+            </button>
+            <button type="button" id="btn-delete-element" class="btn btn-danger" title="Eliminar elemento (Supr)">
+              <span class="btn-icon">🗑️</span>
+              <span>Eliminar</span>
+            </button>
           </div>
         </form>
 
@@ -214,7 +231,8 @@
             <div class="form-group">
               <label for="select-media-tracking">Sensor de Papel (^MN):</label>
               <select id="select-media-tracking" class="spec-select">
-                <option value="gap">Hueco / Gap (^MNY)</option>
+                <option value="gap">Hueco / Gap Estándar (^MNY)</option>
+                <option value="web">Sensor Web / Troquelado (^MNW)</option>
                 <option value="black_mark">Marca Negra (^MNM)</option>
                 <option value="continuous">Continuo (^MNN)</option>
                 <option value="auto">Automático (^MNA)</option>
@@ -224,8 +242,8 @@
             <div class="form-group">
               <label for="select-media-type">Tipo de Impresión (^MT):</label>
               <select id="select-media-type" class="spec-select">
-                <option value="thermal_transfer">Con Cinta Ribbon / Transferencia (^MTT)</option>
-                <option value="direct_thermal">Térmica Directa / Sin Ribbon (^MTD)</option>
+                <option value="thermal_transfer">Transferencia Térmica con Ribbon (^MTT)</option>
+                <option value="direct_thermal">Térmica Directa sin Ribbon (^MTD)</option>
               </select>
             </div>
 
@@ -240,9 +258,29 @@
                 </select>
               </div>
 
-              <div class="form-group" style="max-width: 90px;">
-                <label for="input-media-darkness">Oscuridad (~SD):</label>
+              <div class="form-group" style="max-width: 100px;">
+                <label for="select-print-speed">Velocidad (^PR):</label>
+                <select id="select-print-speed" class="spec-select">
+                  <option value="2">2 ips</option>
+                  <option value="3">3 ips</option>
+                  <option value="4" selected>4 ips</option>
+                  <option value="6">6 ips</option>
+                  <option value="8">8 ips</option>
+                  <option value="10">10 ips</option>
+                  <option value="12">12 ips</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="input-media-darkness">Oscuridad (~SD 0-30):</label>
                 <input type="number" id="input-media-darkness" min="0" max="30" value="23" />
+              </div>
+
+              <div class="form-group">
+                <label for="input-top-offset">Offset Superior (^LT):</label>
+                <input type="number" id="input-top-offset" min="-120" max="120" value="0" />
               </div>
             </div>
           </div>

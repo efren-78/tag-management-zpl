@@ -66,7 +66,7 @@ export async function parseZplCode(zplText: string, currentDpi: number = 203): P
   let dpi = currentDpi;
 
   // Media Hardware Config defaults
-  let mediaTracking: 'gap' | 'black_mark' | 'continuous' | 'auto' = 'gap';
+  let mediaTracking: 'gap' | 'web' | 'black_mark' | 'continuous' | 'auto' = 'gap';
   let mediaType: 'thermal_transfer' | 'direct_thermal' = 'thermal_transfer';
   let printMode: 'tear_off' | 'cutter' | 'peel_off' | 'rewind' = 'tear_off';
   let printSpeed: number | undefined = undefined;
@@ -118,9 +118,10 @@ export async function parseZplCode(zplText: string, currentDpi: number = 203): P
         break;
       }
       case 'MN': {
-        // Media Tracking: ^MNY (gap), ^MNM (black mark), ^MNN (continuous), ^MNA (auto)
+        // Media Tracking: ^MNW (web), ^MNY (gap), ^MNM (black mark), ^MNN (continuous), ^MNA (auto)
         const type = params.substring(0, 1).toUpperCase();
-        if (type === 'N') mediaTracking = 'continuous';
+        if (type === 'W') mediaTracking = 'web';
+        else if (type === 'N') mediaTracking = 'continuous';
         else if (type === 'M') mediaTracking = 'black_mark';
         else if (type === 'A') mediaTracking = 'auto';
         else mediaTracking = 'gap';

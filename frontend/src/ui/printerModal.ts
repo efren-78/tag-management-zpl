@@ -210,12 +210,22 @@ export async function checkBackendStatus(silent: boolean = false): Promise<boole
   updateStatusBadges('checking', 'Backend: Verificando...');
   try {
     const health = await healthCheck();
-    isBackendOnline = health && (health.status.toLowerCase() === 'healthy' || true);
-    updateStatusBadges('online', 'Backend: En línea');
-    if (!silent) {
-      showToast('Servidor Conectado', 'La API REST de LabelPrinterMVP está operativa.', 'success');
+    const status = health?.status?.toLowerCase();
+    isBackendOnline = Boolean(status === 'healthy' || status === 'ok');
+
+    if (isBackendOnline) {
+      updateStatusBadges('online', 'Backend: En línea');
+      if (!silent) {
+        showToast('Servidor Conectado', 'La API REST de LabelPrinterMVP está operativa.', 'success');
+      }
+      return true;
+    } else {
+      updateStatusBadges('offline', `Backend: Estado no saludable (${health?.status || 'desconocido'})`);
+      if (!silent) {
+        showToast('Backend No Saludable', `El servidor respondió con estado: ${health?.status}`, 'error');
+      }
+      return false;
     }
-    return true;
   } catch (err: any) {
     isBackendOnline = false;
     updateStatusBadges('offline', 'Backend: Desconectado');

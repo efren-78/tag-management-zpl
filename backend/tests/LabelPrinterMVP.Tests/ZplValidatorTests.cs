@@ -43,6 +43,6 @@ public class ZplValidatorTests
         
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains("comandos ZPL no autorizados o potencialmente dañinos", result.ErrorMessage);
+        Assert.Contains("comando ZPL no autorizado", result.ErrorMessage);
     }
 }

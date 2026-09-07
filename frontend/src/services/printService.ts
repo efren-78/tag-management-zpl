@@ -4,9 +4,14 @@
  */
 
 export let API_BASE = 'http://localhost:5000/api';
+export let API_KEY = 'zpl-printer-secret-key-2026';
 
 export function setApiBase(url: string) {
   API_BASE = url.replace(/\/+$/, '');
+}
+
+export function setApiKey(key: string) {
+  API_KEY = key;
 }
 
 // ── Tipos ──
@@ -39,9 +44,15 @@ export interface HealthResponse {
 
 async function apiRequest<T>(endpoint: string, options?: RequestInit): Promise<T> {
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(API_KEY ? { 'X-Api-Key': API_KEY } : {}),
+      ...((options?.headers as Record<string, string>) || {}),
+    };
+
     const response = await fetch(`${API_BASE}${endpoint}`, {
-      headers: { 'Content-Type': 'application/json' },
       ...options,
+      headers,
     });
 
     let data: any = null;

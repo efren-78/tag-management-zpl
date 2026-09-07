@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using LabelPrinterMVP.Endpoints;
+using LabelPrinterMVP.Middleware;
 using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,9 @@ var app = builder.Build();
 
 app.UseCors();
 app.UseRateLimiter();
+
+// ── Middleware de Autenticación por API Key ──
+app.UseMiddleware<ApiKeyMiddleware>();
 
 // ── Registro modular de Endpoints ──
 app.MapHealthEndpoints();

@@ -1,6 +1,7 @@
 using System.Threading.RateLimiting;
 using LabelPrinterMVP.DTOs.Requests;
 using LabelPrinterMVP.DTOs.Responses;
+using LabelPrinterMVP.Validation;
 
 namespace LabelPrinterMVP.Endpoints;
 
@@ -20,8 +21,9 @@ public static class PrinterEndpoints
         // ── POST /api/print/tcp ──
         app.MapPost("/api/print/tcp", async (TcpPrintRequest request) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Zpl))
-                return Results.BadRequest(new PrintResponse(false, "El campo 'Zpl' es requerido."));
+            var validation = ZplSecurityValidator.Validate(request.Zpl);
+            if (!validation.IsValid)
+                return Results.BadRequest(new PrintResponse(false, validation.ErrorMessage));
 
             if (string.IsNullOrWhiteSpace(request.Host))
                 return Results.BadRequest(new PrintResponse(false, "El campo 'Host' es requerido."));
@@ -40,8 +42,9 @@ public static class PrinterEndpoints
         // ── POST /api/print/usb ──
         app.MapPost("/api/print/usb", async (UsbPrintRequest request) =>
         {
-            if (string.IsNullOrWhiteSpace(request.Zpl))
-                return Results.BadRequest(new PrintResponse(false, "El campo 'Zpl' es requerido."));
+            var validation = ZplSecurityValidator.Validate(request.Zpl);
+            if (!validation.IsValid)
+                return Results.BadRequest(new PrintResponse(false, validation.ErrorMessage));
 
             if (string.IsNullOrWhiteSpace(request.PrinterName))
                 return Results.BadRequest(new PrintResponse(false, "El campo 'PrinterName' es requerido."));

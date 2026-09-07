@@ -1,4 +1,5 @@
 using LabelPrinterMVP.Endpoints;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +14,24 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ── Rate Limiting: 3 solicitudes cada 10 segundos ──
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.PermitLimit = 3;
+        opt.Window = TimeSpan.FromSeconds(10);
+        opt.QueueLimit = 0;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+});
+
 var app = builder.Build();
 
 app.UseCors();
+app.UseRateLimiter();
 
 // ── Registro modular de Endpoints ──
 app.MapHealthEndpoints();

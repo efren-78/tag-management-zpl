@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using LabelPrinterMVP.DTOs.Requests;
 using LabelPrinterMVP.DTOs.Responses;
 
@@ -33,7 +34,8 @@ public static class PrinterEndpoints
                 : Results.UnprocessableEntity(new PrintResponse(false, error));
         })
         .WithName("PrintViaTcp")
-        .WithTags("Impresión");
+        .WithTags("Impresión")
+        .RequireRateLimiting("fixed");
 
         // ── POST /api/print/usb ──
         app.MapPost("/api/print/usb", async (UsbPrintRequest request) =>
@@ -51,6 +53,7 @@ public static class PrinterEndpoints
                 : Results.UnprocessableEntity(new PrintResponse(false, error));
         })
         .WithName("PrintViaUsb")
-        .WithTags("Impresión");
+        .WithTags("Impresión")
+        .RequireRateLimiting("fixed");
     }
 }
